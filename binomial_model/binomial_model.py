@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import *
+import networkx as nx
+from adjustText import adjust_text
 
 class BinomialModel(object):
     def __init__(self, maturity, n_step, interest):
@@ -76,8 +77,8 @@ class BinomialModel(object):
 
         posG = {}
         for node in G.nodes():
-            posG[node] = (node[0], n + node[0] - 2 * node[1])
-        nx.draw(G, pos = posG)
+            posG[node] = (node[0], self.asset_price.shape[1] + node[0] - 2 * node[1])
+        nx.draw_networkx(G, with_labels = False, pos = posG)
 
         plt.show()
 
@@ -90,10 +91,11 @@ if __name__ == "__main__":
 
     model = BinomialModel(maturity, n_step, interest)
 
+    '''
     vol = 0.2
     model.option(vol, stock_price, strike)
     model.plot_binomial_tree()
-    exit()
+    '''
 
 
     vol = np.arange(16) * 0.05 + 0.05
@@ -108,6 +110,11 @@ if __name__ == "__main__":
     ax1.set_ylabel("Option value")
     ax1.set_xticks(vol)
     ax1.scatter(vol, option_prices)
+    for x, y in zip(vol, option_prices):
+        ax1.text(x, y, y)
+    ax1.grid(True)
+
+    figure.savefig("/Users/evensong/Desktop/CQF/exams/exam1/fig/binomial_model1.png", format = "png")
 
     vol = 0.2
     n_steps = list(range(4, 51))
@@ -123,5 +130,9 @@ if __name__ == "__main__":
     ax2.set_ylabel("Option value")
     ax2.set_xticks(list(range(4, 51, 2)))
     ax2.scatter(n_steps, option_prices)
+    annotation_texts = [plt.text(n_steps[i], option_prices[i], v) for i, v in enumerate(option_prices)]
+    adjust_text(annotation_texts)
+    ax2.grid(True)
+    figure2.savefig("/Users/evensong/Desktop/CQF/exams/exam1/fig/binomial_model2.png", format = "png")
     plt.show()
 
