@@ -103,6 +103,7 @@ if __name__ == "__main__":
     for e in vol:
         model.option(e, stock_price, strike)
         option_prices.append(model.option_price[0,0])
+    print(option_prices)
 
     figure = plt.figure(num = 1, figsize = (10, 6))
     ax1 = figure.add_subplot(111)
@@ -123,6 +124,7 @@ if __name__ == "__main__":
         model.reset(maturity, n_step, interest)
         model.option(vol, stock_price, strike)
         option_prices.append(model.option_price[0,0])
+    print(option_prices)
 
     figure2 = plt.figure(num = 2, figsize = (20, 6))
     ax2 = figure2.add_subplot(111)

@@ -36,7 +36,7 @@ class VaR_Backtest(object):
         self.sigma = np.std(self.log_return[1:])
         self.sigma_10day = self.sigma * np.sqrt(10)
         self.sigma_year = self.sigma * np.sqrt(252)
-        print(f"mu = {self.mu}, 1 day sigma = {self.sigma}, 10 days sigma = {self.sigma_10day}, 1 year sigma = {self.sigma_year}")
+        #print(f"mu = {self.mu}, 1 day sigma = {self.sigma}, 10 days sigma = {self.sigma_10day}, 1 year sigma = {self.sigma_year}")
 
     def comp_breach(self):
         self.__comp_var_hist()
@@ -129,6 +129,6 @@ if __name__ == "__main__":
     #model.plot_histogram()
 
     n_breach, percent_breach, n_consecutive_breach, percent_consecutive_breach = model.comp_breach()
-    print(n_breach, percent_breach, n_consecutive_breach, percent_consecutive_breach)
+    print(np.round(n_breach, 6), np.round(percent_breach, 6), np.round(n_consecutive_breach, 6), np.round(percent_consecutive_breach, 6))
     model.plot_backtest()
 
