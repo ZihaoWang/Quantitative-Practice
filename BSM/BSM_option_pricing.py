@@ -4,8 +4,7 @@ from scipy.stats import norm as Normal
 import matplotlib.pyplot as plt
 import yfinance as yf
 
-
-class BSM_EurOption(object):
+class BSM_BaseModel(object):
     def __init__(self, pr_spot, pr_strike, interest, day_expire, vol):
         assert pr_strike > 0
         self.pr_spot = pr_spot # spot price
@@ -28,7 +27,21 @@ class BSM_EurOption(object):
         self.greeks["vega"] = None
         self.greeks["gamma"] = None
 
-    def comp_option_price(self):
+    def comp_option_prices(self):
+        raise NotImplementedError()
+
+    def comp_greeks(self):
+        raise NotImplementedError()
+
+class BSM_EurOption(BSM_BaseModel):
+    def __init__(self, pr_spot, pr_strike, interest, day_expire, vol):
+        super(BSM_EurOption, self).__init__(pr_spot, pr_strike, interest, day_expire, vol)
+        a = self.vol * np.sqrt(self.day_expire)
+        self.d1 = (np.log(self.pr_spot / self.pr_strike) + (self.interest + np.power(self.vol, 2) / 2) * self.day_expire) / a
+        self.d2 = self.d1 - a
+        self.decay_exp = np.exp(-self.interest * self.day_expire)
+
+    def comp_option_prices(self):
         if np.abs(self.vol) < 1e-6 or np.abs(self.day_expire) < 1e-6:
             self.option_prices["pr_call"] = np.maximum(0.0, self.pr_spot - self.pr_strike)
             self.option_prices["pr_put"] = np.maximum(0.0, self.pr_strike - self.pr_spot)
@@ -70,11 +83,11 @@ if __name__ == "__main__":
     interest = 0.05
     day_expire = 1
     vol = 0.2
-    bsm = BSM_EurOption(pr_spot, pr_strike, interest, day_expire, vol)
+    bsm_eur_option = BSM_EurOption(pr_spot, pr_strike, interest, day_expire, vol)
 
-    option_prices = bsm.comp_option_price()
+    option_prices = bsm_eur_option.comp_option_prices()
     for k, v in option_prices.items():
         print(f"{k} = {v}")
-    greeks = bsm.comp_greeks()
+    greeks = bsm_eur_option.comp_greeks()
     for k, v in greeks.items():
         print(f"{k} = {v}")
