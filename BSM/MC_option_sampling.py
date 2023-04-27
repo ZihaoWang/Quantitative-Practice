@@ -88,13 +88,19 @@ class StockPriceGenerator(object):
             weak_err_eu.append(np.max(np.abs((exacted_sum - eu_sum) / n_path)))
             weak_err_mil.append(np.max(np.abs((exacted_sum - mil_sum) / n_path)))
 
+        print(f"time interval: {1 / all_step}")
+        print(f"EM error (strong): {np.array(strong_err_eu)}")
+        print(f"EM error (weak): {np.array(weak_err_eu)}")
+        print(f"Milstein error (strong): {np.array(strong_err_mil)}")
+        print(f"Milstein error (weak): {np.array(weak_err_mil)}")
         figure = plt.figure(num = 1, figsize = (14, 8))
         ax = figure.add_subplot(111)
         dt = 1 / all_step
-        ax.loglog(dt, strong_err_eu, label = "EM error: strong", color = "red")
-        ax.loglog(dt, weak_err_eu, label = "EM error: weak", color = "orange", ls = "--")
-        ax.loglog(dt, strong_err_mil, label = "Milstein error: strong", color = "blue")
-        ax.loglog(dt, weak_err_mil, label = "Milstein error: weak", color = "green", ls = "--")
+        ax.plot(dt, strong_err_eu, label = "EM error: strong", color = "red")
+        ax.plot(dt, weak_err_eu, label = "EM error: weak", color = "orange", ls = "--")
+        ax.plot(dt, strong_err_mil, label = "Milstein error: strong", color = "blue")
+        ax.plot(dt, weak_err_mil, label = "Milstein error: weak", color = "green", ls = "--")
+        ax.set_xscale("log")
         ax.set_xlabel("Time inverval $\Delta t$")
         ax.set_ylabel("Error")
         ax.legend()
@@ -132,17 +138,22 @@ class AsianOptionPricing(object):
     def plot_prices(self, pr_strikes):
         i_figure = 1
         fixed_strike = True
+        print("fixed strike:")
+        print(pr_strikes)
         for arithmetic_avg in [True, False]:
             pr_calls, pr_puts = [], []
             for pr_strike in pr_strikes:
                 pr_call, pr_put = self.discrete(pr_strike, arithmetic_avg, fixed_strike)
                 pr_calls.append(pr_call)
                 pr_puts.append(pr_put)
-
+            
+            avg_label = "arithmetic_avg" if arithmetic_avg else "geometric_avg"
+            print(avg_label)
+            print(f"call price = {np.array(pr_calls)}, put price = {np.array(pr_puts)}")
             figure = plt.figure(num = i_figure, figsize = (14, 8))
-            ax = figure.add_subplot(111)
-            ax.plot(pr_strikes, pr_calls, label = "Asian call prices", color = "blue")
-            ax.plot(pr_strikes, pr_puts, label = "Asian put prices", color = "orange")
+            ax = figure.add_subplot(111)    
+            ax.plot(pr_strikes, pr_calls, label = "Asian call", color = "blue")
+            ax.plot(pr_strikes, pr_puts, label = "Asian put", color = "orange")
             ax.set_xlabel("Strike price")
             ax.set_ylabel("Option price")
             ax.legend()
@@ -155,17 +166,25 @@ class AsianOptionPricing(object):
         fixed_strike = False
         prices = []
         avg_labels = []
+        print("floated strike:")
         for arithmetic_avg in [True, False]:
             pr_call, pr_put = self.discrete(pr_strike, arithmetic_avg, fixed_strike)
             avg_label = "arithmetic_avg" if arithmetic_avg else "geometric_avg"
             prices += [pr_call, pr_put]
             avg_labels += [f"call ({avg_label})", f"put ({avg_label})"]
 
+            print(avg_label)
+            print(f"call price = {np.array([pr_call])}, put price = {np.array([pr_put])}")
         figure = plt.figure(num = i_figure, figsize = (14, 8))
         ax = figure.add_subplot(111)
-        ax.scatter(avg_labels, prices, color = ["orange", "red", "green", "blue"])
+        hatches = ["//", "//", "", ""]
+        colors = ["orange", "cyan", "orange", "cyan"]
+        for i in range(len(prices)):
+            ax.bar(i, prices[i], label = avg_labels[i], hatch = hatches[i], color = colors[i])
         ax.set_xlabel("Floating strike Asian options")
         ax.set_ylabel("Option price")
+        ax.xaxis.set_ticks([])
+        ax.legend()
         fname = "asian_option_float_strike"
         figure.savefig(f"/Users/evensong/Desktop/CQF/exams/exam2/fig/{fname}.png", format = "png")
 
@@ -173,20 +192,20 @@ class AsianOptionPricing(object):
 
 
 if __name__ == "__main__":
-    np.set_printoptions(precision = 2)
+    np.set_printoptions(precision = 3, suppress = True)
     seed = 1024
     np.random.seed(seed)
     random.seed(seed)
 
     init_pr_spot = 100
     interest = 0.05
-    vol = 0.2
+    vol = 1.0
     generator = StockPriceGenerator(init_pr_spot, interest, vol)
     #generator.plot_convergence()
 
     day_expire = 252
     n_path = int(1e4)
-    pr_strikes = np.arange(10, 201, 10)
+    pr_strikes = np.arange(20, 201, 20)
     milstein_paths = generator.euler_maruyama(n_path, day_expire)
     asian = AsianOptionPricing(milstein_paths, interest, day_expire)
     asian.plot_prices(pr_strikes)
